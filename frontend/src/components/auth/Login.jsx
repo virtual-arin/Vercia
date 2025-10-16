@@ -5,7 +5,7 @@ import { useAuth } from "../../authContext";
 import { Box, Button, PageHeader } from "@primer/react";
 import "./auth.css";
 
-import logo from "../../assets/vercel.png";
+import logo from "../../assets/vercia.png";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {

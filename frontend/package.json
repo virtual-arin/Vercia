@@ -11,11 +11,15 @@
   },
   "dependencies": {
     "@primer/react": "^37.31.0",
+    "@tailwindcss/vite": "^4.1.14",
     "@uiw/react-heat-map": "^2.3.3",
+    "@uiw/react-tooltip": "^4.22.3",
     "axios": "^1.12.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-router-dom": "^7.9.1"
+    "react-image-crop": "^11.0.10",
+    "react-router-dom": "^7.9.1",
+    "tailwindcss": "^4.1.14"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
