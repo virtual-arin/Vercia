@@ -1,18 +1,15 @@
-const { MongoClient } = require("mongodb");
+const mongoose = require("mongoose");
 
 const uri = process.env.MONGO_DB_URI;
-let client;
-let db;
 
 async function connectToDb() {
-  if (db) {
-    return;
+  if (!uri) {
+    console.error("FATAL ERROR: MONGO_DB_URI is not defined.");
+    process.exit(1);
   }
 
   try {
-    client = new MongoClient(uri);
-    await client.connect();
-    db = client.db("Vercia");
+    await mongoose.connect(uri);
     console.log("Connected to database successfully!");
   } catch (error) {
     console.error("Could not connect to DB", error);
@@ -20,8 +17,4 @@ async function connectToDb() {
   }
 }
 
-function getDb() {
-  return db;
-}
-
-module.exports = { connectToDb, getDb };
+module.exports = { connectToDb };

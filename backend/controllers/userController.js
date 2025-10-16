@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-var ObjectId = require("mongodb").ObjectId;
+const { ObjectId } = require("mongoose").Types;
 const User = require("../models/userModel");
 const {
   s3: s3Client,
