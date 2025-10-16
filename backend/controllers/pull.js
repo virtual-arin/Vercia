@@ -6,16 +6,15 @@ const {
   GetObjectCommand,
 } = require("@aws-sdk/client-s3");
 
-async function pullRepo() {
+async function pullRepository() {
   const repoPath = path.resolve(process.cwd(), ".vercia");
-  const commitPaths = path.join(repoPath, "commits");
 
   try {
-    const listParams = {
+    const listCommand = new ListObjectsV2Command({
       Bucket: S3_BUCKET,
       Prefix: "commits/",
-    };
-    const data = await s3.send(new ListObjectsV2Command(listParams));
+    });
+    const data = await s3.send(listCommand);
 
     if (!data.Contents || data.Contents.length === 0) {
       console.log("No commits to pull from S3.");
@@ -23,32 +22,36 @@ async function pullRepo() {
     }
 
     const objects = data.Contents;
+
     for (const object of objects) {
       const key = object.Key;
-      // Skip directories
-      if (key.endsWith("/")) continue;
 
-      const commitDir = path.join(
-        commitPaths,
-        path.dirname(key).split("/").pop()
-      );
-      await fs.mkdir(commitDir, { recursive: true });
+      // Skip directories themselves
+      if (key.endsWith("/")) {
+        continue;
+      }
 
-      const getParams = {
+      const localFilePath = path.join(repoPath, key);
+      const dirName = path.dirname(localFilePath);
+
+      await fs.mkdir(dirName, { recursive: true });
+
+      const params = {
         Bucket: S3_BUCKET,
         Key: key,
       };
 
-      const fileContentResponse = await s3.send(
-        new GetObjectCommand(getParams)
-      );
-      const fileContent = await fileContentResponse.Body.transformToByteArray();
-      await fs.writeFile(path.join(repoPath, key), fileContent);
+      const getCommand = new GetObjectCommand(params);
+      const response = await s3.send(getCommand);
+
+      // The body of a GetObjectCommand response is a stream
+      await fs.writeFile(localFilePath, response.Body);
     }
-    console.log("All commits pulled successfully from S3");
-  } catch (error) {
-    console.error("An Error occured while pulling files from S3 : ", error);
+
+    console.log("All commits pulled from S3 successfully.");
+  } catch (err) {
+    console.error("Unable to pull : ", err);
   }
 }
 
-module.exports = { pullRepo };
+module.exports = { pullRepository };
