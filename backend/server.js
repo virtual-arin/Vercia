@@ -70,11 +70,6 @@ function startServer() {
   const port = process.env.PORT || 3000;
   app.use(express.json());
 
-  if (!process.env.MONGO_DB_URI) {
-    console.error("FATAL ERROR: MONGO_DB_URI is not defined.");
-    process.exit(1);
-  }
-
   const mongoURI = process.env.MONGO_DB_URI;
   app.use(cors({ origin: "*" }));
 

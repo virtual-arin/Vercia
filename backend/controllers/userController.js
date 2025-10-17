@@ -2,12 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { ObjectId } = require("mongoose").Types;
 const User = require("../models/userModel");
-const {
-  s3: s3Client,
-  S3_BUCKET: bucketName,
-} = require("../config/aws-config.js");
-const { PutObjectCommand } = require("@aws-sdk/client-s3");
-const { generateFileName } = require("../utils/fileName.js");
+const cloudinary = require("../config/cloudinary.config.js");
 
 //Signup
 async function signup(req, res) {
@@ -136,35 +131,39 @@ async function updateUserProfile(req, res) {
 
 async function updateUserProfilePicture(req, res) {
   const currentID = req.params.id;
-  const file = req.file;
-  console.log(file);
+  const { file } = req;
+
+  if (!file) {
+    return res.status(400).json({ message: "No file uploaded." });
+  }
 
   try {
-    const imageName = generateFileName();
-    const params = {
-      Bucket: bucketName,
-      Key: imageName,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    };
-    const command = new PutObjectCommand(params);
-    await s3Client.send(command);
-
-    const result = await User.findByIdAndUpdate(
-      currentID,
+    const uploadStream = cloudinary.uploader.upload_stream(
       {
-        $set: {
-          profilePhoto: `https://${bucketName}.s3.amazonaws.com/${imageName}`,
-        },
+        folder: "vercia_profile_pictures",
+        transformation: [{ width: 250, height: 250, crop: "fill" }],
       },
-      { new: true }
+      async (error, result) => {
+        if (error) {
+          console.error("Cloudinary upload error:", error);
+          return res.status(500).send("Error uploading to image server.");
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+          currentID,
+          { $set: { profilePhoto: result.secure_url } },
+          { new: true }
+        );
+
+        if (!updatedUser) {
+          return res.status(404).json({ message: "User not found!" });
+        }
+
+        res.json(updatedUser);
+      }
     );
 
-    if (!result) {
-      return res.status(404).json({ message: "User not found!" });
-    }
-
-    res.send(result);
+    uploadStream.end(file.buffer);
   } catch (error) {
     console.error(
       "An Error occurred while updating user profile picture : ",

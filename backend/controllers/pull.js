@@ -26,7 +26,6 @@ async function pullRepository() {
     for (const object of objects) {
       const key = object.Key;
 
-      // Skip directories themselves
       if (key.endsWith("/")) {
         continue;
       }
